@@ -1,0 +1,39 @@
+{
+  "operations": [
+    {
+      "type": "income",
+      "name": "начало",
+      "amount": 2032.0,
+      "currency": "RUB",
+      "comment": "",
+      "datetime": "2026-01-01 12:36:16",
+      "is_pending": false
+    }
+  ],
+  "currencies": {
+    "RUB": 39565.0
+  },
+  "pending_currencies": {
+    "RUB": 14860.0
+  },
+  "base_currency": "RUB",
+  "exchange_rates": {
+    "USD": 90.0,
+    "EUR": 100.0,
+    "RUB": 1.0,
+    "KZT": 0.2,
+    "UAH": 2.3,
+    "BYN": 28.0
+  },
+  "predefined_expense_names": [
+    "Ашан",
+    "Аптека",
+    "Вайлдберриз",
+    "Другое"
+  ],
+  "predefined_income_names": [
+    "Зарплата",
+    "Стипендия",
+    "Другое"
+  ]
+}
