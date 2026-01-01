@@ -6,19 +6,14 @@ from datetime import datetime
 import json
 import os
 def to_normal_readly_type(number):
-    # Разделяем целую и дробную части
     integer_part = int(abs(number))
     decimal_part = abs(number) - integer_part
     
-    # Форматируем целую часть с разделителем тысяч
     formatted_integer = f"{integer_part:,}".replace(",", " ")
     
-    # Добавляем знак для отрицательных чисел
     sign = "-" if number < 0 else ""
     
-    # Если есть дробная часть, добавляем ее
     if decimal_part > 0:
-        # Округляем до 2 знаков после запятой
         decimal_str = f"{decimal_part:.2f}".lstrip("0")
         return f"{sign}{formatted_integer}{decimal_str}"
     else:
@@ -28,11 +23,11 @@ class FinanceApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.operations = []
-        self.currencies = {}  # Словарь: валюта -> фактическая сумма
-        self.pending_currencies = {}  # Словарь: валюта -> неполученные доходы
+        self.currencies = {}  
+        self.pending_currencies = {} 
         self.is_amount_hidden = False
-        self.base_currency = 'RUB'  # Основная валюта для отображения
-        self.exchange_rates = {  # Примерные курсы валют
+        self.base_currency = 'RUB'  
+        self.exchange_rates = { 
             'USD': 90.0,
             'EUR': 100.0,
             'RUB': 1.0,
@@ -40,7 +35,6 @@ class FinanceApp(QMainWindow):
             'UAH': 2.3,
             'BYN': 28.0
         }
-        # Предопределенные названия
         self.predefined_expense_names = ['Ашан', 'Аптека', 'Вайлдберриз', 'Магнит', 'Пятерочка', 'Такси', 'Кафе', 'Другое']
         self.predefined_income_names = ['Зарплата', 'Фриланс', 'Инвестиции', 'Подарок', 'Возврат долга', 'Другое']
         
@@ -51,21 +45,17 @@ class FinanceApp(QMainWindow):
         self.setWindowTitle('Finance Manager')
         self.setGeometry(100, 100, 900, 700)
         
-        # Создаем главный виджет и вертикальный layout
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         layout = QVBoxLayout(main_widget)
         
-        # Верхняя панель с общей и фактической суммой
         top_panel = QWidget()
         top_layout = QVBoxLayout(top_panel)
         
-        # Общая сумма (включая ожидаемые доходы)
         self.total_label = QLabel('Общая сумма (с ожидаемыми): 0.00 RUB')
         self.total_label.setStyleSheet('font-size: 16px; font-weight: bold; color: #FF9800;')
         self.total_label.setAlignment(Qt.AlignCenter)
         
-        # Фактическая сумма
         self.actual_label = QLabel('Фактическая сумма: 0.00 RUB')
         self.actual_label.setStyleSheet('font-size: 16px; font-weight: bold; color: #4CAF50;')
         self.actual_label.setAlignment(Qt.AlignCenter)
@@ -73,7 +63,6 @@ class FinanceApp(QMainWindow):
         top_layout.addWidget(self.total_label)
         top_layout.addWidget(self.actual_label)
         
-        # Кнопка скрытия
         hide_layout = QHBoxLayout()
         self.hide_button = QPushButton('Скрыть суммы')
         self.hide_button.clicked.connect(self.toggle_amount_visibility)
@@ -84,72 +73,59 @@ class FinanceApp(QMainWindow):
         
         layout.addWidget(top_panel)
         
-        # Создаем вкладки
         self.tab_widget = QTabWidget()
         
-        # Вкладка "Главная"
         self.main_tab = QWidget()
         self.setup_main_tab()
         self.tab_widget.addTab(self.main_tab, "Главная")
         
-        # Вкладка "Операции"
         self.operations_tab = QWidget()
         self.setup_operations_tab()
         self.tab_widget.addTab(self.operations_tab, "Операции")
         
-        # Вкладка "Ожидаемые доходы"
         self.pending_tab = QWidget()
         self.setup_pending_tab()
         self.tab_widget.addTab(self.pending_tab, "Ожидаемые доходы")
         
-        # Вкладка "Аналитика"
         self.analytics_tab = QWidget()
         self.setup_analytics_tab()
         self.tab_widget.addTab(self.analytics_tab, "Аналитика")
         
-        # Вкладка "Настройки"
         self.settings_tab = QWidget()
         self.setup_settings_tab()
         self.tab_widget.addTab(self.settings_tab, "Настройки")
         
         layout.addWidget(self.tab_widget)
         
-        # Обновляем отображение
         self.update_amounts_display()
         self.update_operations_table()
         
     def setup_main_tab(self):
         layout = QVBoxLayout(self.main_tab)
         
-        # Кнопка для добавления дохода
         income_btn = QPushButton('Добавить доход')
         income_btn.setStyleSheet('background-color: #4CAF50; color: white; font-size: 14px; padding: 10px;')
         income_btn.clicked.connect(lambda: self.add_operation('income'))
         layout.addWidget(income_btn)
         
-        # Кнопка для добавления ожидаемого дохода
         pending_income_btn = QPushButton('Добавить ожидаемый доход')
         pending_income_btn.setStyleSheet('background-color: #FF9800; color: white; font-size: 14px; padding: 10px;')
         pending_income_btn.clicked.connect(lambda: self.add_operation('pending_income'))
         layout.addWidget(pending_income_btn)
         
-        # Кнопка для добавления расхода
         expense_btn = QPushButton('Добавить расход')
         expense_btn.setStyleSheet('background-color: #f44336; color: white; font-size: 14px; padding: 10px;')
         expense_btn.clicked.connect(lambda: self.add_operation('expense'))
         layout.addWidget(expense_btn)
         
-        # Кнопка для показа таблицы операций
         show_ops_btn = QPushButton('Показать таблицу операций')
         show_ops_btn.clicked.connect(lambda: self.tab_widget.setCurrentIndex(1))
         layout.addWidget(show_ops_btn)
         
-        # Кнопка для показа ожидаемых доходов
         show_pending_btn = QPushButton('Показать ожидаемые доходы')
         show_pending_btn.clicked.connect(lambda: self.tab_widget.setCurrentIndex(2))
         layout.addWidget(show_pending_btn)
         
-        # Показываем баланс по валютам (фактический)
         currencies_label = QLabel('Фактический баланс по валютам:')
         currencies_label.setStyleSheet('font-weight: bold; margin-top: 20px;')
         layout.addWidget(currencies_label)
@@ -157,7 +133,6 @@ class FinanceApp(QMainWindow):
         self.currencies_list = QListWidget()
         layout.addWidget(self.currencies_list)
         
-        # Ожидаемые доходы по валютам
         pending_label = QLabel('Ожидаемые доходы по валютам:')
         pending_label.setStyleSheet('font-weight: bold; margin-top: 20px;')
         layout.addWidget(pending_label)
@@ -170,7 +145,6 @@ class FinanceApp(QMainWindow):
     def setup_operations_tab(self):
         layout = QVBoxLayout(self.operations_tab)
         
-        # Таблица операций (только фактические)
         self.operations_table = QTableWidget()
         self.operations_table.setColumnCount(6)
         self.operations_table.setHorizontalHeaderLabels([
@@ -179,7 +153,6 @@ class FinanceApp(QMainWindow):
         self.operations_table.horizontalHeader().setStretchLastSection(True)
         layout.addWidget(self.operations_table)
         
-        # Кнопки управления
         btn_layout = QHBoxLayout()
         
         delete_btn = QPushButton('Удалить выбранное')
@@ -195,7 +168,6 @@ class FinanceApp(QMainWindow):
     def setup_pending_tab(self):
         layout = QVBoxLayout(self.pending_tab)
         
-        # Таблица ожидаемых доходов
         self.pending_table = QTableWidget()
         self.pending_table.setColumnCount(7)
         self.pending_table.setHorizontalHeaderLabels([
@@ -204,7 +176,6 @@ class FinanceApp(QMainWindow):
         self.pending_table.horizontalHeader().setStretchLastSection(True)
         layout.addWidget(self.pending_table)
         
-        # Кнопка подтверждения ожидаемого дохода
         confirm_layout = QHBoxLayout()
         confirm_btn = QPushButton('Подтвердить выбранный доход')
         confirm_btn.clicked.connect(self.confirm_selected_pending)
@@ -221,7 +192,6 @@ class FinanceApp(QMainWindow):
     def setup_analytics_tab(self):
         layout = QVBoxLayout(self.analytics_tab)
         
-        # Заглушка для аналитики
         label = QLabel('Аналитика\n\nЭта вкладка находится в разработке.\nЗдесь будет отображаться графическая аналитика ваших финансов.')
         label.setAlignment(Qt.AlignCenter)
         label.setStyleSheet('font-size: 16px; color: #666;')
@@ -230,7 +200,6 @@ class FinanceApp(QMainWindow):
     def setup_settings_tab(self):
         layout = QVBoxLayout(self.settings_tab)
         
-        # Настройка основной валюты
         currency_label = QLabel('Основная валюта для отображения:')
         layout.addWidget(currency_label)
         
@@ -240,7 +209,6 @@ class FinanceApp(QMainWindow):
         self.base_currency_combo.currentTextChanged.connect(self.change_base_currency)
         layout.addWidget(self.base_currency_combo)
         
-        # Настройка курсов валют
         rates_label = QLabel('Курсы валют (относительно RUB):')
         rates_label.setStyleSheet('font-weight: bold; margin-top: 20px;')
         layout.addWidget(rates_label)
@@ -289,19 +257,17 @@ class FinanceApp(QMainWindow):
             self.operations.append(operation)
             
             if op_type == 'pending_income' or is_pending:
-                # Добавляем в ожидаемые доходы
                 if currency in self.pending_currencies:
                     self.pending_currencies[currency] += amount
                 else:
                     self.pending_currencies[currency] = amount
             else:
-                # Добавляем в фактические операции
                 if op_type == 'income':
                     if currency in self.currencies:
                         self.currencies[currency] += amount
                     else:
                         self.currencies[currency] = amount
-                else:  # expense
+                else:  
                     if currency in self.currencies:
                         self.currencies[currency] -= amount
                     else:
@@ -321,7 +287,6 @@ class FinanceApp(QMainWindow):
             if currency == self.base_currency:
                 total += amount
             else:
-                # Конвертируем в основную валюту
                 if currency in self.exchange_rates and self.base_currency == 'RUB':
                     total += amount * self.exchange_rates[currency]
                 elif self.base_currency in self.exchange_rates and currency == 'RUB':
@@ -336,7 +301,6 @@ class FinanceApp(QMainWindow):
 
 
     def update_amounts_display(self):
-        # Рассчитываем общую сумму (фактическая + ожидаемая)
         actual_total = self.calculate_total_in_base_currency(self.currencies)
         pending_total = self.calculate_total_in_base_currency(self.pending_currencies)
         total_with_pending = actual_total + pending_total
@@ -357,7 +321,6 @@ class FinanceApp(QMainWindow):
         self.update_amounts_display()
         
     def update_operations_table(self):
-        # Показываем только фактические операции (не ожидаемые)
         actual_operations = [op for op in self.operations if not op.get('is_pending', False)]
         self.operations_table.setRowCount(len(actual_operations))
         
@@ -382,23 +345,19 @@ class FinanceApp(QMainWindow):
         self.operations_table.resizeColumnsToContents()
     
     def update_pending_table(self):
-        # Показываем только ожидаемые доходы
         pending_operations = [op for op in self.operations if op.get('is_pending', False)]
         self.pending_table.setRowCount(len(pending_operations))
         
         for row, op in enumerate(pending_operations):
-            # Статус
             status_item = QTableWidgetItem('Ожидает')
             status_item.setForeground(QColor('#FF9800'))
             
-            # Данные операции
             name_item = QTableWidgetItem(op['name'])
             amount_item = QTableWidgetItem(f"{op['amount']:.2f}")
             currency_item = QTableWidgetItem(op['currency'])
             datetime_item = QTableWidgetItem(op['datetime'])
             comment_item = QTableWidgetItem(op['comment'])
             
-            # Кнопка подтверждения
             confirm_btn = QPushButton('Подтвердить')
             confirm_btn.clicked.connect(lambda checked, r=row: self.confirm_pending_income(r))
             confirm_btn.setStyleSheet('background-color: #4CAF50; color: white; padding: 5px;')
@@ -427,7 +386,6 @@ class FinanceApp(QMainWindow):
                     item.setForeground(QColor('#f44336'))
                 self.currencies_list.addItem(item)
         
-        # Обновляем список ожидаемых доходов
         self.pending_list.clear()
         
         for currency, amount in sorted(self.pending_currencies.items()):
@@ -438,14 +396,11 @@ class FinanceApp(QMainWindow):
                 self.pending_list.addItem(item)
     
     def confirm_pending_income(self, row_index):
-        # Находим ожидаемую операцию
         pending_ops = [op for op in self.operations if op.get('is_pending', False)]
         if row_index < len(pending_ops):
-            # Находим индекс в общем списке операций
             pending_op = pending_ops[row_index]
             for i, op in enumerate(self.operations):
                 if op == pending_op:
-                    # Убираем из ожидаемых
                     currency = op['currency']
                     amount = op['amount']
                     
@@ -454,13 +409,11 @@ class FinanceApp(QMainWindow):
                         if self.pending_currencies[currency] == 0:
                             del self.pending_currencies[currency]
                     
-                    # Добавляем в фактические
                     if currency in self.currencies:
                         self.currencies[currency] += amount
                     else:
                         self.currencies[currency] = amount
                     
-                    # Меняем статус операции
                     op['is_pending'] = False
                     
                     self.update_amounts_display()
@@ -482,7 +435,6 @@ class FinanceApp(QMainWindow):
             if selected < len(pending_ops):
                 pending_op = pending_ops[selected]
                 
-                # Убираем из ожидаемых
                 currency = pending_op['currency']
                 amount = pending_op['amount']
                 
@@ -491,7 +443,6 @@ class FinanceApp(QMainWindow):
                     if self.pending_currencies[currency] == 0:
                         del self.pending_currencies[currency]
                 
-                # Удаляем операцию
                 self.operations.remove(pending_op)
                 
                 self.update_amounts_display()
@@ -506,13 +457,11 @@ class FinanceApp(QMainWindow):
             if selected < len(actual_ops):
                 op = actual_ops[selected]
                 
-                # Корректируем баланс
                 if op['type'] == 'income':
                     self.currencies[op['currency']] -= op['amount']
                 else:
                     self.currencies[op['currency']] += op['amount']
                 
-                # Удаляем операцию
                 self.operations.remove(op)
                 
                 self.update_amounts_display()
@@ -606,13 +555,11 @@ class OperationDialog(QDialog):
         self.name_combo.currentTextChanged.connect(self.on_name_changed)
         layout.addWidget(self.name_combo)
         
-        # Поле для ввода своего названия (скрыто по умолчанию)
         self.custom_name_input = QLineEdit()
         self.custom_name_input.setPlaceholderText('Введите свое название...')
         self.custom_name_input.setVisible(False)
         layout.addWidget(self.custom_name_input)
         
-        # Сумма
         layout.addWidget(QLabel('Сумма:'))
         self.amount_input = QDoubleSpinBox()
         self.amount_input.setMinimum(0.01)
@@ -620,7 +567,6 @@ class OperationDialog(QDialog):
         self.amount_input.setValue(100.0)
         layout.addWidget(self.amount_input)
         
-        # Валюта (по умолчанию RUB)
         layout.addWidget(QLabel('Валюта:'))
         self.currency_input = QComboBox()
         self.currency_input.addItems(['RUB', 'USD', 'EUR', 'KZT', 'UAH', 'BYN'])
@@ -628,13 +574,11 @@ class OperationDialog(QDialog):
         self.currency_input.setEditable(True)
         layout.addWidget(self.currency_input)
         
-        # Комментарий
         layout.addWidget(QLabel('Комментарий:'))
         self.comment_input = QTextEdit()
         self.comment_input.setMaximumHeight(100)
         layout.addWidget(self.comment_input)
         
-        # Кнопки
         btn_layout = QHBoxLayout()
         ok_btn = QPushButton('Добавить')
         ok_btn.clicked.connect(self.accept)
@@ -646,7 +590,6 @@ class OperationDialog(QDialog):
         layout.addLayout(btn_layout)
     
     def on_name_changed(self, text):
-        # Показываем поле для ввода своего названия, если выбрано "Другое"
         if text == 'Другое':
             self.custom_name_input.setVisible(True)
             self.custom_name_input.setFocus()
@@ -654,7 +597,6 @@ class OperationDialog(QDialog):
             self.custom_name_input.setVisible(False)
     
     def get_data(self):
-        # Получаем название
         if self.name_combo.currentText() == 'Другое' and self.custom_name_input.text():
             name = self.custom_name_input.text()
         else:
@@ -671,10 +613,8 @@ class OperationDialog(QDialog):
 def main():
     app = QApplication(sys.argv)
     
-    # Устанавливаем стиль
     app.setStyle('Fusion')
     
-    # Настройка палитры для темной темы
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.WindowText, Qt.white)
